@@ -1,149 +1,350 @@
 
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, Users, PlusCircle, BarChart3 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  Loader2,
+  PlusCircle,
+  BookOpen,
+  FileText,
+  Users,
+  BarChart,
+  School,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-const DashboardGuru = () => {
-  // Data dummy untuk dashboard
-  const stats = [
-    { title: "Total Kelas", value: "5", icon: <Users className="text-primary" size={24} /> },
-    { title: "Total Kuis", value: "12", icon: <FileText className="text-secondary" size={24} /> },
-    { title: "Total Materi", value: "24", icon: <BookOpen className="text-success" size={24} /> },
-    { title: "Siswa Aktif", value: "78", icon: <BarChart3 className="text-warning" size={24} /> },
-  ];
+export default function DashboardGuru() {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalKelas: 0,
+    totalMateri: 0,
+    totalKuis: 0,
+    totalSiswa: 0,
+  });
+  const [recentKelas, setRecentKelas] = useState<any[]>([]);
+  const [profileData, setProfileData] = useState<any>(null);
 
-  // Data dummy kelas terbaru
-  const recentClasses = [
-    { id: "1", name: "Matematika Kelas 10", subject: "Matematika", students: 25, code: "MATH10" },
-    { id: "2", name: "Fisika Kelas 11", subject: "Fisika", students: 22, code: "PHYS11" },
-    { id: "3", name: "Biologi Kelas 12", subject: "Biologi", students: 18, code: "BIO12" },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchProfileData();
+      fetchDashboardData();
+    }
+  }, [user]);
 
-  // Data dummy kuis terbaru
-  const recentQuizzes = [
-    { id: "1", title: "Ulangan Harian Fungsi", class: "Matematika Kelas 10", submissions: 20, maxScore: 100 },
-    { id: "2", title: "Quiz Kinematika", class: "Fisika Kelas 11", submissions: 15, maxScore: 100 },
-    { id: "3", title: "Latihan Genetika", class: "Biologi Kelas 12", submissions: 10, maxScore: 100 },
-  ];
+  const fetchProfileData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user?.id)
+        .single();
+
+      if (error) throw error;
+      setProfileData(data);
+    } catch (error: any) {
+      console.error("Error fetching profile data:", error.message);
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    try {
+      // Recent classes
+      const { data: kelasData, error: kelasError } = await supabase
+        .from("kelas")
+        .select("*")
+        .eq("guru_id", user?.id)
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (kelasError) throw kelasError;
+      setRecentKelas(kelasData || []);
+
+      // Get counts
+      const [kelasCount, materiCount, kuisCount] = await Promise.all([
+        supabase
+          .from("kelas")
+          .select("*", { count: "exact", head: true })
+          .eq("guru_id", user?.id),
+        supabase
+          .from("materi")
+          .select("*", { count: "exact", head: true })
+          .eq("guru_id", user?.id),
+        supabase
+          .from("kuis")
+          .select("*", { count: "exact", head: true })
+          .eq("guru_id", user?.id),
+      ]);
+
+      // Count students across all classes
+      let totalStudents = 0;
+      if (kelasCount.count && kelasCount.count > 0) {
+        const { data: kelasIds } = await supabase
+          .from("kelas")
+          .select("id")
+          .eq("guru_id", user?.id);
+        
+        if (kelasIds && kelasIds.length > 0) {
+          const kelasIdList = kelasIds.map(k => k.id);
+          
+          const { count: studentCount } = await supabase
+            .from("kelas_siswa")
+            .select("*", { count: "exact", head: true })
+            .in("kelas_id", kelasIdList);
+          
+          totalStudents = studentCount || 0;
+        }
+      }
+
+      setStats({
+        totalKelas: kelasCount.count || 0,
+        totalMateri: materiCount.count || 0,
+        totalKuis: kuisCount.count || 0,
+        totalSiswa: totalStudents,
+      });
+    } catch (error: any) {
+      toast.error("Error mengambil data dashboard: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <DashboardLayout role="guru" userName="Budi Santoso">
-      {/* Statistik */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, i) => (
-          <Card key={i} className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
-                </div>
-                <div className="p-2 rounded-full bg-gray-50">{stat.icon}</div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <ProtectedRoute>
+      <DashboardLayout 
+        role="guru" 
+        userName={profileData?.name || "Guru"}
+        userAvatar={profileData?.avatar_url}
+      >
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold">
+              Selamat Datang, {profileData?.name || "Guru"}!
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Kelola kelas, materi pembelajaran, dan kuis Anda di sini
+            </p>
+          </div>
 
-      {/* Tombol Aksi Cepat */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Button asChild className="bg-primary h-auto py-3" size="lg">
-          <Link to="/dashboard/guru/kelas/buat" className="flex items-center justify-center">
-            <PlusCircle size={18} className="mr-2" />
-            Buat Kelas Baru
-          </Link>
-        </Button>
-        
-        <Button asChild className="bg-secondary h-auto py-3" size="lg">
-          <Link to="/dashboard/guru/kuis/buat" className="flex items-center justify-center">
-            <PlusCircle size={18} className="mr-2" />
-            Buat Kuis Baru
-          </Link>
-        </Button>
-        
-        <Button asChild className="bg-success h-auto py-3" size="lg">
-          <Link to="/dashboard/guru/materi/buat" className="flex items-center justify-center">
-            <PlusCircle size={18} className="mr-2" />
-            Unggah Materi Baru
-          </Link>
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Kelas Terbaru */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Kelas Terbaru</CardTitle>
-              <CardDescription>Kelas yang Anda kelola</CardDescription>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/dashboard/guru/kelas">Lihat Semua</Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="px-6">
-            <div className="space-y-4">
-              {recentClasses.map((cls) => (
-                <div key={cls.id} className="flex items-center justify-between border-b pb-4">
-                  <div>
-                    <p className="font-medium">{cls.name}</p>
-                    <p className="text-sm text-gray-500">{cls.subject} • {cls.students} siswa</p>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="bg-gray-100 rounded px-2 py-1 text-xs font-medium">
-                      Kode: {cls.code}
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">
+                      Total Kelas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <School className="h-5 w-5 text-blue-500" />
+                      <div className="text-2xl font-bold">{stats.totalKelas}</div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/dashboard/guru/kelas/buat">Tambah Kelas Baru</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">
+                      Total Siswa
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-5 w-5 text-green-500" />
+                      <div className="text-2xl font-bold">{stats.totalSiswa}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">
+                      Total Materi
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <BookOpen className="h-5 w-5 text-amber-500" />
+                      <div className="text-2xl font-bold">{stats.totalMateri}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500">
+                      Total Kuis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-purple-500" />
+                      <div className="text-2xl font-bold">{stats.totalKuis}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-        {/* Kuis Terbaru */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Kuis Terbaru</CardTitle>
-              <CardDescription>Kuis yang Anda buat</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/dashboard/guru/kuis">Lihat Semua</Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="px-6">
-            <div className="space-y-4">
-              {recentQuizzes.map((quiz) => (
-                <div key={quiz.id} className="flex items-center justify-between border-b pb-4">
-                  <div>
-                    <p className="font-medium">{quiz.title}</p>
-                    <p className="text-sm text-gray-500">{quiz.class}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm">
-                      <span className="text-green-600 font-medium">{quiz.submissions}</span> / {quiz.maxScore} nilai
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/dashboard/guru/kuis/buat">Buat Kuis Baru</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </DashboardLayout>
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Kelas Terbaru</CardTitle>
+                      <Link to="/dashboard/guru/kelas">
+                        <Button variant="ghost" size="sm">
+                          Lihat Semua
+                        </Button>
+                      </Link>
+                    </div>
+                    <CardDescription>
+                      Kelas yang baru-baru ini Anda buat atau perbarui
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {recentKelas.length === 0 ? (
+                      <div className="text-center py-6">
+                        <p className="text-gray-500 mb-4">
+                          Anda belum memiliki kelas. Buat kelas pertama Anda sekarang!
+                        </p>
+                        <Button asChild>
+                          <Link to="/dashboard/guru/kelas/new">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Buat Kelas
+                          </Link>
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {recentKelas.map((kelas) => (
+                          <div
+                            key={kelas.id}
+                            className="flex items-center justify-between border-b border-gray-100 pb-3 last:border-0"
+                          >
+                            <div>
+                              <h4 className="font-medium">{kelas.name}</h4>
+                              <p className="text-sm text-gray-500">
+                                {kelas.subject}
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="ml-2"
+                            >
+                              <Link to={`/dashboard/guru/kelas/${kelas.id}`}>
+                                Detail
+                              </Link>
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="border-t p-4">
+                    <div className="flex justify-between w-full">
+                      <Button asChild variant="outline">
+                        <Link to="/dashboard/guru/kelas">
+                          <School className="mr-2 h-4 w-4" />
+                          Kelola Kelas
+                        </Link>
+                      </Button>
+                      <Button asChild>
+                        <Link to="/dashboard/guru/kelas/new">
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Buat Kelas
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Manajemen Konten</CardTitle>
+                    <CardDescription>
+                      Kelola materi dan kuis untuk semua kelas Anda
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center p-4 bg-blue-50 rounded-md">
+                      <div className="flex items-center space-x-3">
+                        <BookOpen className="h-6 w-6 text-blue-500" />
+                        <div>
+                          <h4 className="font-medium">Materi Pembelajaran</h4>
+                          <p className="text-xs text-gray-500">
+                            {stats.totalMateri} materi tersedia
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-x-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to="/dashboard/guru/materi">Kelola</Link>
+                        </Button>
+                        <Button size="sm" asChild>
+                          <Link to="/dashboard/guru/materi/new">
+                            <PlusCircle className="mr-1 h-3 w-3" />
+                            Buat
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-4 bg-amber-50 rounded-md">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-6 w-6 text-amber-500" />
+                        <div>
+                          <h4 className="font-medium">Kuis dan Ujian</h4>
+                          <p className="text-xs text-gray-500">
+                            {stats.totalKuis} kuis tersedia
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-x-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to="/dashboard/guru/kuis">Kelola</Link>
+                        </Button>
+                        <Button size="sm" asChild>
+                          <Link to="/dashboard/guru/kuis/new">
+                            <PlusCircle className="mr-1 h-3 w-3" />
+                            Buat
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="border-t p-4">
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to="/dashboard/guru/analisis">
+                        <BarChart className="mr-2 h-4 w-4" />
+                        Lihat Analisis Pembelajaran
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            </>
+          )}
+        </div>
+      </DashboardLayout>
+    </ProtectedRoute>
   );
-};
-
-export default DashboardGuru;
+}
