@@ -1,171 +1,44 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Form } from "@/components/ui/form";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Form schema validation
-const formSchema = z.object({
-  title: z.string().min(1, "Judul kuis harus diisi"),
-  description: z.string().optional(),
-  kelas_id: z.string().min(1, "Pilih kelas untuk kuis ini"),
-  time_limit: z.coerce.number().min(1, "Waktu minimum adalah 1 menit").max(180, "Waktu maksimum adalah 180 menit").nullable(),
-  shuffle_questions: z.boolean().default(false),
-  is_published: z.boolean().default(false),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { useKuisForm } from "./hooks/useKuisForm";
+import { KuisBasicInfoForm } from "./components/KuisBasicInfoForm";
+import { KuisSettingsForm } from "./components/KuisSettingsForm";
 
 export default function KuisForm() {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [kelasList, setKelasList] = useState<any[]>([]);
-  const isEditing = !!id;
-  const initialKelasId = location.state?.kelasId;
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      kelas_id: initialKelasId || "",
-      time_limit: null,
-      shuffle_questions: false,
-      is_published: false,
-    },
-  });
+  const {
+    form,
+    isLoading,
+    isSubmitting,
+    isEditing,
+    kelasList,
+    fetchKelasList,
+    fetchKuis,
+    onSubmit
+  } = useKuisForm();
 
   useEffect(() => {
     if (user) {
-      fetchKelasList();
+      fetchKelasList(user.id);
       
       if (isEditing) {
-        fetchKuis();
+        fetchKuis(user.id);
       }
     }
   }, [user, isEditing]);
 
-  const fetchKelasList = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("kelas")
-        .select("id, name, subject")
-        .eq("guru_id", user?.id)
-        .order("name");
-
-      if (error) throw error;
-      setKelasList(data || []);
-    } catch (error: any) {
-      toast.error("Error mengambil daftar kelas: " + error.message);
-    }
-  };
-
-  const fetchKuis = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("kuis")
-        .select("*")
-        .eq("id", id)
-        .eq("guru_id", user?.id)
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        form.reset({
-          title: data.title,
-          description: data.description || "",
-          kelas_id: data.kelas_id,
-          time_limit: data.time_limit,
-          shuffle_questions: data.shuffle_questions || false,
-          is_published: data.is_published || false,
-        });
-      }
-    } catch (error: any) {
-      toast.error("Error mengambil data kuis: " + error.message);
-      navigate("/dashboard/guru/kuis");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onSubmit = async (values: FormValues) => {
-    if (!user) {
-      toast.error("Anda harus login terlebih dahulu");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const kuisData = {
-        title: values.title,
-        description: values.description,
-        kelas_id: values.kelas_id,
-        time_limit: values.time_limit,
-        shuffle_questions: values.shuffle_questions,
-        is_published: values.is_published,
-        guru_id: user.id,
-      };
-
-      if (isEditing) {
-        // Update existing quiz
-        const { error } = await supabase
-          .from("kuis")
-          .update({
-            ...kuisData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id);
-
-        if (error) throw error;
-        toast.success("Kuis berhasil diperbarui");
-      } else {
-        // Create new quiz
-        const { error } = await supabase.from("kuis").insert(kuisData);
-
-        if (error) throw error;
-        toast.success("Kuis baru berhasil dibuat");
-      }
-
-      navigate("/dashboard/guru/kuis");
-    } catch (error: any) {
-      toast.error(
-        `Error ${isEditing ? "memperbarui" : "membuat"} kuis: ${error.message}`
-      );
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (values: any) => {
+    if (user) {
+      onSubmit(values, user.id);
     }
   };
 
@@ -193,7 +66,7 @@ export default function KuisForm() {
           ) : (
             <div className="max-w-3xl">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Informasi Dasar</CardTitle>
@@ -202,65 +75,7 @@ export default function KuisForm() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Judul Kuis</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Contoh: Ulangan Harian Bab 2" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Deskripsi Kuis</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Deskripsikan kuis ini secara singkat..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="kelas_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Kelas</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Pilih kelas" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {kelasList.map((kelas) => (
-                                  <SelectItem key={kelas.id} value={kelas.id}>
-                                    {kelas.name} - {kelas.subject}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <KuisBasicInfoForm form={form} kelasList={kelasList} />
                     </CardContent>
                   </Card>
 
@@ -272,76 +87,7 @@ export default function KuisForm() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="time_limit"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Batas Waktu (menit)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Contoh: 30"
-                                value={field.value === null ? '' : field.value}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  field.onChange(value === '' ? null : Number(value));
-                                }}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Kosongkan jika tidak ada batasan waktu
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="shuffle_questions"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">
-                                Acak Soal
-                              </FormLabel>
-                              <FormDescription>
-                                Soal akan ditampilkan dalam urutan acak untuk setiap siswa
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="is_published"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">
-                                Publikasikan Kuis
-                              </FormLabel>
-                              <FormDescription>
-                                Kuis yang dipublikasikan akan terlihat dan dapat dikerjakan oleh siswa
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                      <KuisSettingsForm form={form} />
                     </CardContent>
                   </Card>
 
