@@ -15,12 +15,14 @@ const LoginPage = () => {
   return (
     <Layout hideFooter>
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <Link to="/" className="absolute top-4 left-4 inline-flex items-center text-primary hover:underline">
-          <ChevronLeft className="mr-1" size={20} />
-          Kembali ke Beranda
-        </Link>
+        <div className="absolute top-4 left-4 md:top-6 md:left-6">
+          <Link to="/" className="inline-flex items-center text-primary hover:underline">
+            <ChevronLeft className="mr-1" size={20} />
+            Kembali ke Beranda
+          </Link>
+        </div>
 
-        <Card className="w-full max-w-md shadow-md">
+        <Card className="w-full max-w-md shadow-md mt-12">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Login MPAA</CardTitle>
             <CardDescription>
