@@ -13,7 +13,7 @@ const LoginPage = () => {
   const defaultTab = role === "guru" ? "guru" : role === "siswa" ? "siswa" : role === "orangtua" ? "orangtua" : "guru";
 
   return (
-    <Layout hideFooter>
+    <Layout hideFooter hideHeader>
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="absolute top-4 left-4 md:top-6 md:left-6">
           <Link to="/" className="inline-flex items-center text-primary hover:underline">
