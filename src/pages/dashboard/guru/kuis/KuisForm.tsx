@@ -37,13 +37,12 @@ const formSchema = z.object({
   title: z.string().min(1, "Judul kuis harus diisi"),
   description: z.string().optional(),
   kelas_id: z.string().min(1, "Pilih kelas untuk kuis ini"),
-  time_limit: z.union([
-    z.number().min(1, "Waktu minimum adalah 1 menit").max(180, "Waktu maksimum adalah 180 menit"),
-    z.literal("")
-  ]).transform(val => val === "" ? null : val),
+  time_limit: z.coerce.number().min(1, "Waktu minimum adalah 1 menit").max(180, "Waktu maksimum adalah 180 menit").nullable(),
   shuffle_questions: z.boolean().default(false),
   is_published: z.boolean().default(false),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function KuisForm() {
   const { id } = useParams<{ id: string }>();
@@ -56,13 +55,13 @@ export default function KuisForm() {
   const isEditing = !!id;
   const initialKelasId = location.state?.kelasId;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
       kelas_id: initialKelasId || "",
-      time_limit: "",
+      time_limit: null,
       shuffle_questions: false,
       is_published: false,
     },
@@ -109,7 +108,7 @@ export default function KuisForm() {
           title: data.title,
           description: data.description || "",
           kelas_id: data.kelas_id,
-          time_limit: data.time_limit === null ? "" : data.time_limit,
+          time_limit: data.time_limit,
           shuffle_questions: data.shuffle_questions || false,
           is_published: data.is_published || false,
         });
@@ -122,7 +121,7 @@ export default function KuisForm() {
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     if (!user) {
       toast.error("Anda harus login terlebih dahulu");
       return;
@@ -276,22 +275,18 @@ export default function KuisForm() {
                       <FormField
                         control={form.control}
                         name="time_limit"
-                        render={({ field: { value, onChange, ...field } }) => (
+                        render={({ field }) => (
                           <FormItem>
                             <FormLabel>Batas Waktu (menit)</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
                                 placeholder="Contoh: 30"
-                                {...field}
-                                value={value === null ? "" : value}
-                                onChange={(e) =>
-                                  onChange(
-                                    e.target.value === ""
-                                      ? ""
-                                      : parseInt(e.target.value, 10)
-                                  )
-                                }
+                                value={field.value === null ? '' : field.value}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  field.onChange(value === '' ? null : Number(value));
+                                }}
                               />
                             </FormControl>
                             <FormDescription>

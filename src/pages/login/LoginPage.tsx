@@ -2,7 +2,7 @@
 import { Layout } from "@/components/layout/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoginGuru } from "./LoginGuru";
+import LoginGuru from "./LoginGuru";
 import { LoginSiswa } from "./LoginSiswa";
 import { LoginOrangtua } from "./LoginOrangtua";
 import { ChevronLeft } from "lucide-react";
