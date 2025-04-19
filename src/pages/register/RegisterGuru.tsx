@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export function RegisterGuru() {
   const [formData, setFormData] = useState({
@@ -16,6 +18,7 @@ export function RegisterGuru() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -29,17 +32,32 @@ export function RegisterGuru() {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      alert("Password dan konfirmasi password harus sama");
+      toast.error("Password dan konfirmasi password harus sama");
       return;
     }
     
     setIsLoading(true);
     
-    // Simulasi registrasi (akan diintegrasikan dengan Supabase nanti)
-    setTimeout(() => {
+    try {
+      // Prepare user metadata
+      const userData = {
+        name: formData.name,
+        school: formData.school,
+        role: "guru"
+      };
+
+      // Register the user with Supabase
+      await signUp(formData.email, formData.password, userData);
+      
+      // Redirect to login page after successful registration
+      toast.success("Pendaftaran berhasil! Silakan login dengan akun baru Anda.");
+      navigate("/login/guru");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Terjadi kesalahan saat mendaftar");
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard/guru");
-    }, 1500);
+    }
   };
 
   return (
