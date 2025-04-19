@@ -6,6 +6,7 @@ import LoginGuru from "./LoginGuru";
 import { LoginSiswa } from "./LoginSiswa";
 import { LoginOrangtua } from "./LoginOrangtua";
 import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 
 const LoginPage = () => {
@@ -17,10 +18,18 @@ const LoginPage = () => {
       {/* Header/Navbar */}
       <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-primary text-white font-bold text-xl p-2 rounded">MPAA</div>
-            <span className="font-bold text-lg hidden md:block">Media Pembelajaran dan Asesmen Akademik</span>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="bg-primary text-white font-bold text-xl p-2 rounded">MPAA</div>
+              <span className="font-bold text-lg hidden md:block">Media Pembelajaran dan Asesmen Akademik</span>
+            </Link>
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link to="/" className="text-gray-600 hover:text-gray-900">Beranda</Link>
+              <Link to="/about" className="text-gray-600 hover:text-gray-900">Tentang</Link>
+              <Link to="/features" className="text-gray-600 hover:text-gray-900">Fitur</Link>
+              <Link to="/contact" className="text-gray-600 hover:text-gray-900">Kontak</Link>
+            </nav>
+          </div>
         </div>
       </div>
 
