@@ -21,12 +21,6 @@ const LoginPage = () => {
               <div className="bg-primary text-white font-bold text-xl p-2 rounded">MPAA</div>
               <span className="font-bold text-lg hidden md:block">Media Pembelajaran dan Asesmen Akademik</span>
             </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/" className="text-gray-600 hover:text-gray-900">Beranda</Link>
-              <Link to="/about" className="text-gray-600 hover:text-gray-900">Tentang</Link>
-              <Link to="/features" className="text-gray-600 hover:text-gray-900">Fitur</Link>
-              <Link to="/contact" className="text-gray-600 hover:text-gray-900">Kontak</Link>
-            </nav>
           </div>
         </div>
       </div>
