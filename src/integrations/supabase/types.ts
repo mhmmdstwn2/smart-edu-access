@@ -119,6 +119,7 @@ export type Database = {
       kuis: {
         Row: {
           created_at: string
+          created_by: string | null
           description: string | null
           guru_id: string
           id: string
@@ -131,6 +132,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           guru_id: string
           id?: string
@@ -143,6 +145,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           guru_id?: string
           id?: string
