@@ -3,25 +3,46 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { QrCode } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export function LoginOrangtua() {
   const [isLoading, setIsLoading] = useState(false);
   const [showQrScanner, setShowQrScanner] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleQrScan = () => {
     setShowQrScanner(true);
     setIsLoading(true);
+    setErrorMessage(null);
     
-    // Simulasi scan QR (akan diintegrasikan dengan scanner sesungguhnya nanti)
-    setTimeout(() => {
+    try {
+      // Check for internet connection
+      if (!navigator.onLine) {
+        throw new Error("Koneksi internet terputus. Silakan periksa koneksi Anda.");
+      }
+      
+      // Simulasi scan QR (akan diintegrasikan dengan scanner sesungguhnya nanti)
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/dashboard/orangtua");
+      }, 2000);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Terjadi kesalahan saat memindai QR Code");
       setIsLoading(false);
-      navigate("/dashboard/orangtua");
-    }, 2000);
+    }
   };
 
   return (
     <div className="space-y-6">
+      {errorMessage && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="text-center space-y-2">
         <p className="text-gray-600">
           Untuk memantau aktivitas dan perkembangan belajar anak Anda, scan QR Code yang dibagikan oleh anak Anda.

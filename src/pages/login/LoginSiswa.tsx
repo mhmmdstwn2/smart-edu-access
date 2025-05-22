@@ -6,23 +6,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export function LoginSiswa() {
   const [classId, setClassId] = useState("");
   const [studentName, setStudentName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showQrScanner, setShowQrScanner] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
     
-    // Simulasi login (akan diintegrasikan dengan Supabase nanti)
-    setTimeout(() => {
+    try {
+      // Check for internet connection
+      if (!navigator.onLine) {
+        throw new Error("Koneksi internet terputus. Silakan periksa koneksi Anda.");
+      }
+      
+      // Simulasi login (akan diintegrasikan dengan Supabase nanti)
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/dashboard/siswa");
+      }, 1500);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Terjadi kesalahan saat login");
       setIsLoading(false);
-      navigate("/dashboard/siswa");
-    }, 1500);
+    }
   };
 
   const handleQrScan = () => {
@@ -32,6 +46,13 @@ export function LoginSiswa() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {errorMessage && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-2">
         <Label htmlFor="classId">ID Kelas</Label>
         <Input

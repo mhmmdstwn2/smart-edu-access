@@ -49,10 +49,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      // Check for internet connection
+      if (!navigator.onLine) {
+        throw new Error("Koneksi internet terputus. Silakan periksa koneksi Anda.");
+      }
+      
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        // More specific error handling
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Email atau password salah");
+        } else if (error.message.includes("Email not confirmed")) {
+          throw new Error("Email belum dikonfirmasi. Silakan cek inbox email Anda");
+        } else {
+          throw error;
+        }
+      }
+      
+      if (!data.user) {
+        throw new Error("Gagal mendapatkan informasi pengguna");
+      }
+      
       toast.success("Login berhasil!");
+      
     } catch (error: any) {
+      console.error("Login error:", error);
       toast.error(error.message || "Error saat login");
       throw error;
     }
