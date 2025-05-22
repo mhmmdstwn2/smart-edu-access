@@ -8,6 +8,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  connectionStatus: "connected" | "disconnected" | "checking";
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: any) => Promise<void>;
   signOut: () => Promise<void>;
@@ -19,6 +20,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<"connected" | "disconnected" | "checking">("checking");
+
+  // Check Supabase connection on init
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        setConnectionStatus("checking");
+        
+        // Simple ping to Supabase - try to get the session
+        const { error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Supabase connection error:", error);
+          setConnectionStatus("disconnected");
+          toast.error("Gagal terhubung ke database. Silakan periksa koneksi internet Anda.");
+        } else {
+          setConnectionStatus("connected");
+          console.log("Supabase connection successful");
+          toast.success("Terhubung ke database");
+        }
+      } catch (error) {
+        console.error("Connection check error:", error);
+        setConnectionStatus("disconnected");
+        toast.error("Gagal terhubung ke database. Silakan periksa koneksi internet Anda.");
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -159,7 +189,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      connectionStatus,
+      signIn, 
+      signUp, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );

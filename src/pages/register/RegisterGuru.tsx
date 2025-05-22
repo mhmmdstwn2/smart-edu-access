@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Wifi, WifiOff } from "lucide-react";
 
 export function RegisterGuru() {
   const [formData, setFormData] = useState({
@@ -18,7 +20,7 @@ export function RegisterGuru() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, connectionStatus } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -61,79 +63,103 @@ export function RegisterGuru() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nama Lengkap</Label>
-        <Input
-          id="name"
-          placeholder="Nama lengkap Anda"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
+    <>
+      {/* Connection status indicator */}
+      <div className="mb-4">
+        <Alert variant={connectionStatus === "connected" ? "default" : "destructive"} className="bg-opacity-80">
+          {connectionStatus === "connected" ? (
+            <div className="flex items-center text-green-600">
+              <Wifi className="h-4 w-4 mr-2" />
+              <AlertDescription>Terhubung ke database Supabase</AlertDescription>
+            </div>
+          ) : connectionStatus === "disconnected" ? (
+            <div className="flex items-center">
+              <WifiOff className="h-4 w-4 mr-2" />
+              <AlertDescription>Tidak terhubung ke database Supabase. Periksa koneksi internet Anda.</AlertDescription>
+            </div>
+          ) : (
+            <div className="flex items-center text-blue-600">
+              <div className="h-4 w-4 mr-2 animate-pulse bg-blue-600 rounded-full"></div>
+              <AlertDescription>Memeriksa koneksi ke database...</AlertDescription>
+            </div>
+          )}
+        </Alert>
       </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="nama@sekolah.ac.id"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="school">Sekolah</Label>
-        <Input
-          id="school"
-          placeholder="Nama sekolah tempat Anda mengajar"
-          value={formData.school}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="Minimal 8 karakter"
-          value={formData.password}
-          onChange={handleChange}
-          minLength={8}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          placeholder="Masukkan password yang sama"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          minLength={8}
-          required
-        />
-      </div>
-      
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Mendaftar..." : "Daftar"}
-      </Button>
-      
-      <div className="text-center text-sm">
-        <p>
-          Sudah punya akun?{" "}
-          <Link to="/login/guru" className="text-primary hover:underline">
-            Login di sini
-          </Link>
-        </p>
-      </div>
-    </form>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Nama Lengkap</Label>
+          <Input
+            id="name"
+            placeholder="Nama lengkap Anda"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="nama@sekolah.ac.id"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="school">Sekolah</Label>
+          <Input
+            id="school"
+            placeholder="Nama sekolah tempat Anda mengajar"
+            value={formData.school}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Minimal 8 karakter"
+            value={formData.password}
+            onChange={handleChange}
+            minLength={8}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="Masukkan password yang sama"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            minLength={8}
+            required
+          />
+        </div>
+        
+        <Button type="submit" className="w-full" disabled={isLoading || connectionStatus !== "connected"}>
+          {isLoading ? "Mendaftar..." : "Daftar"}
+        </Button>
+        
+        <div className="text-center text-sm">
+          <p>
+            Sudah punya akun?{" "}
+            <Link to="/login/guru" className="text-primary hover:underline">
+              Login di sini
+            </Link>
+          </p>
+        </div>
+      </form>
+    </>
   );
 }
