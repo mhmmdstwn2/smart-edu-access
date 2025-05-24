@@ -60,7 +60,7 @@ export function useKuisForm() {
           title: data.title,
           description: data.description || "",
           kelas_id: data.kelas_id,
-          time_limit: data.time_limit,
+          time_limit: data.time_limit || null,
           shuffle_questions: data.shuffle_questions || false,
           is_published: data.is_published || false,
         });

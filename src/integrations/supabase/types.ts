@@ -110,33 +110,36 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
-          duration_minutes: number | null
           guru_id: string
           id: string
           is_published: boolean | null
           kelas_id: string | null
+          shuffle_questions: boolean | null
+          time_limit: number | null
           title: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
-          duration_minutes?: number | null
           guru_id: string
           id?: string
           is_published?: boolean | null
           kelas_id?: string | null
+          shuffle_questions?: boolean | null
+          time_limit?: number | null
           title: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
-          duration_minutes?: number | null
           guru_id?: string
           id?: string
           is_published?: boolean | null
           kelas_id?: string | null
+          shuffle_questions?: boolean | null
+          time_limit?: number | null
           title?: string
           updated_at?: string | null
         }
@@ -284,6 +287,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string | null
+          description: string | null
           file_url: string | null
           guru_id: string
           id: string
@@ -295,6 +299,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string | null
+          description?: string | null
           file_url?: string | null
           guru_id: string
           id?: string
@@ -306,6 +311,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string | null
+          description?: string | null
           file_url?: string | null
           guru_id?: string
           id?: string
