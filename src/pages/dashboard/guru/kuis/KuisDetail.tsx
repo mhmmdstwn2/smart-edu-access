@@ -75,15 +75,15 @@ export default function KuisDetail() {
 
       // Fetch counts in parallel
       const [soalResult, attemptResult] = await Promise.all([
-        // Count questions
+        // Count questions using correct table name
         supabase
-          .from("soal_kuis")
+          .from("kuis_pertanyaan")
           .select("*", { count: "exact", head: true })
           .eq("kuis_id", id),
         
-        // Count attempts
+        // Count attempts using correct table name
         supabase
-          .from("kuis_attempts")
+          .from("kuis_hasil")
           .select("*", { count: "exact", head: true })
           .eq("kuis_id", id),
       ]);

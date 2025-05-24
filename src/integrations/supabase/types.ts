@@ -282,31 +282,37 @@ export type Database = {
       }
       materi: {
         Row: {
-          content: string
+          content: string | null
           created_at: string | null
+          file_url: string | null
           guru_id: string
           id: string
           kelas_id: string | null
           title: string
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
-          content: string
+          content?: string | null
           created_at?: string | null
+          file_url?: string | null
           guru_id: string
           id?: string
           kelas_id?: string | null
           title: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
-          content?: string
+          content?: string | null
           created_at?: string | null
+          file_url?: string | null
           guru_id?: string
           id?: string
           kelas_id?: string | null
           title?: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
