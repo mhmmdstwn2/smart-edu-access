@@ -9,7 +9,345 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      absensi: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          kelas_id: string
+          siswa_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          kelas_id: string
+          siswa_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          kelas_id?: string
+          siswa_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absensi_kelas_id_fkey"
+            columns: ["kelas_id"]
+            isOneToOne: false
+            referencedRelation: "kelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kelas: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          guru_id: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          guru_id: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          guru_id?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kelas_siswa: {
+        Row: {
+          id: string
+          joined_at: string | null
+          kelas_id: string
+          siswa_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          kelas_id: string
+          siswa_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          kelas_id?: string
+          siswa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kelas_siswa_kelas_id_fkey"
+            columns: ["kelas_id"]
+            isOneToOne: false
+            referencedRelation: "kelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kuis: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          guru_id: string
+          id: string
+          is_published: boolean | null
+          kelas_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          guru_id: string
+          id?: string
+          is_published?: boolean | null
+          kelas_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          guru_id?: string
+          id?: string
+          is_published?: boolean | null
+          kelas_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kuis_kelas_id_fkey"
+            columns: ["kelas_id"]
+            isOneToOne: false
+            referencedRelation: "kelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kuis_hasil: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          kuis_id: string
+          score: number
+          siswa_id: string
+          started_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          kuis_id: string
+          score: number
+          siswa_id: string
+          started_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          kuis_id?: string
+          score?: number
+          siswa_id?: string
+          started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kuis_hasil_kuis_id_fkey"
+            columns: ["kuis_id"]
+            isOneToOne: false
+            referencedRelation: "kuis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kuis_jawaban: {
+        Row: {
+          answer: string | null
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          kuis_id: string
+          pertanyaan_id: string
+          siswa_id: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          kuis_id: string
+          pertanyaan_id: string
+          siswa_id: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          kuis_id?: string
+          pertanyaan_id?: string
+          siswa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kuis_jawaban_kuis_id_fkey"
+            columns: ["kuis_id"]
+            isOneToOne: false
+            referencedRelation: "kuis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kuis_jawaban_pertanyaan_id_fkey"
+            columns: ["pertanyaan_id"]
+            isOneToOne: false
+            referencedRelation: "kuis_pertanyaan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kuis_pertanyaan: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          id: string
+          kuis_id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          points: number | null
+          question: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          id?: string
+          kuis_id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          points?: number | null
+          question: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          id?: string
+          kuis_id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          points?: number | null
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kuis_pertanyaan_kuis_id_fkey"
+            columns: ["kuis_id"]
+            isOneToOne: false
+            referencedRelation: "kuis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materi: {
+        Row: {
+          content: string
+          created_at: string | null
+          guru_id: string
+          id: string
+          kelas_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          guru_id: string
+          id?: string
+          kelas_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          guru_id?: string
+          id?: string
+          kelas_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materi_kelas_id_fkey"
+            columns: ["kelas_id"]
+            isOneToOne: false
+            referencedRelation: "kelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          name: string
+          role: string
+          school: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          name: string
+          role?: string
+          school?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          role?: string
+          school?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Nama harus minimal 2 karakter"),
-  email: z.string().email("Email tidak valid").optional(),
+  email: z.string().optional(),
   school: z.string().optional(),
   avatar_url: z.string().optional(),
 });
@@ -66,7 +66,7 @@ export default function PengaturanGuru() {
         .from("profiles")
         .select("*")
         .eq("id", user?.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
       
