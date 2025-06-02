@@ -236,11 +236,56 @@ export type Database = {
           },
         ]
       }
+      kuis_media: {
+        Row: {
+          created_at: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          media_type: string
+          mime_type: string | null
+          pertanyaan_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          media_type: string
+          mime_type?: string | null
+          pertanyaan_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          media_type?: string
+          mime_type?: string | null
+          pertanyaan_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kuis_media_pertanyaan_id_fkey"
+            columns: ["pertanyaan_id"]
+            isOneToOne: false
+            referencedRelation: "kuis_pertanyaan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kuis_pertanyaan: {
         Row: {
+          additional_data: Json | null
+          audio_url: string | null
           correct_answer: string
           created_at: string | null
+          explanation: string | null
           id: string
+          image_url: string | null
           kuis_id: string
           option_a: string
           option_b: string
@@ -248,11 +293,17 @@ export type Database = {
           option_d: string
           points: number | null
           question: string
+          template_id: string | null
+          video_url: string | null
         }
         Insert: {
+          additional_data?: Json | null
+          audio_url?: string | null
           correct_answer: string
           created_at?: string | null
+          explanation?: string | null
           id?: string
+          image_url?: string | null
           kuis_id: string
           option_a: string
           option_b: string
@@ -260,11 +311,17 @@ export type Database = {
           option_d: string
           points?: number | null
           question: string
+          template_id?: string | null
+          video_url?: string | null
         }
         Update: {
+          additional_data?: Json | null
+          audio_url?: string | null
           correct_answer?: string
           created_at?: string | null
+          explanation?: string | null
           id?: string
+          image_url?: string | null
           kuis_id?: string
           option_a?: string
           option_b?: string
@@ -272,6 +329,8 @@ export type Database = {
           option_d?: string
           points?: number | null
           question?: string
+          template_id?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -281,7 +340,44 @@ export type Database = {
             referencedRelation: "kuis"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "kuis_pertanyaan_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "kuis_template"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      kuis_template: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          type: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          type: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          type?: string
+        }
+        Relationships: []
       }
       materi: {
         Row: {
